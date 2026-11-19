@@ -1,0 +1,164 @@
+:root {
+  --bg0: #0c1218;
+  --bg1: #14202c;
+  --ink: #e7eef6;
+  --muted: #8aa0b5;
+  --accent: #3db8a0;
+  --warn: #d4a017;
+  --fail: #d45b5b;
+  --pass: #3db86a;
+  --line: rgba(231, 238, 246, 0.12);
+  font-family: "IBM Plex Sans", "Noto Sans SC", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1a3348 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #1b2a22 0%, transparent 50%),
+    var(--bg0);
+  color: var(--ink);
+}
+
+body {
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+.brand {
+  font-family: "Source Serif 4", "Noto Serif SC", Georgia, serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  letter-spacing: 0.02em;
+  margin: 0 0 0.25rem;
+}
+
+.sub {
+  color: var(--muted);
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.badge {
+  display: inline-block;
+  border: 1px solid var(--line);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--warn);
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg1);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+button.primary {
+  background: linear-gradient(180deg, #2a6b5d, #1d4a41);
+  border-color: #3db8a0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .grid.two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background: rgba(20, 32, 44, 0.72);
+  padding: 0.75rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.uplot,
+.uplot * {
+  font-family: inherit;
+}
+
+.bits {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 1.5rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.pass {
+  color: var(--pass);
+}
+.fail {
+  color: var(--fail);
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist li {
+  padding: 0.2rem 0;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+canvas.raster {
+  width: 100%;
+  height: 120px;
+  background: #0a1016;
+  border: 1px solid var(--line);
+}

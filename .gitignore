@@ -1,0 +1,11 @@
+sim/build/
+web/node_modules/
+web/dist/
+.DS_Store
+*.o
+*.a
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+.vscode/
+.idea/

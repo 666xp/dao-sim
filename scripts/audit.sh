@@ -3,8 +3,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo "=== audit: output.cpp string literals (includes only expected) ==="
-rg -n '"' sim/src/output.cpp || true
+echo "=== audit: output.cpp string literals (exclude #include) ==="
+rg -n '"' sim/src/output.cpp | rg -v '#include' || true
 
 echo "=== audit: forbidden consciousness / semantic map markers in sim/src ==="
 if rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src; then

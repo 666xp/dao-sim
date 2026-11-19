@@ -20,16 +20,55 @@ cd /d D:\dao-sim
 - `web/`：Vite + React 监测台（只收和画，不参与动力学）
 - 引擎：`ws://127.0.0.1:3848` · 前端：`http://127.0.0.1:3847`
 
+CMake 开关：
+
+| 选项 | 默认 | 含义 |
+|------|------|------|
+| `DAO_SIM_BUILD_DYNAMICS` | ON | 阶段 2+：道核/Roche/σ/`sim_world`；关闭后只留导通层 |
+| `DAO_SIM_BUILD_ENGINE` | ON | WebSocket 引擎（需要 DYNAMICS=ON） |
+| `DAO_SIM_BUILD_TESTS` | ON | Catch2 单测 |
+
 ## 依赖
 
 - CMake ≥ 3.16、C++17 编译器
 - Node.js ≥ 18（前端）
 - 网络：首次配置会用 CMake FetchContent 拉取 Catch2、IXWebSocket
 
-## 构建与运行
+## 阶段 0 验收（导通层绿灯）
+
+只验证图 / 事件队列 / 神经元骨架 / `sim_validate`。  
+**不**编引擎、**不**跑 `test_dao_oscillation` / `test_criticality`（那是阶段 2）。
+
+Windows（`D:\dao-sim`）：
+
+```bat
+scripts\verify_phase0.bat
+```
+
+Linux/macOS：
 
 ```bash
-# 引擎 + 测试
+chmod +x scripts/verify_phase0.sh
+./scripts/verify_phase0.sh
+```
+
+等价手动命令：
+
+```bat
+cmake -S sim -B sim/build-phase0 -DDAO_SIM_BUILD_ENGINE=OFF -DDAO_SIM_BUILD_DYNAMICS=OFF
+cmake --build sim/build-phase0 -j
+ctest --test-dir sim/build-phase0 --output-on-failure
+sim\build-phase0\sim_validate.exe 42
+```
+
+通过标准：`ctest` 仅 2 项（`test_graph`、`test_queue_long_delay`）全绿；`sim_validate` 的 PASS/FAIL 清单全绿。
+
+## 构建与运行（完整产品）
+
+默认打开动力学 + 引擎：
+
+```bash
+# 引擎 + 全部测试（含阶段 2）
 cmake -S sim -B sim/build
 cmake --build sim/build -j
 ctest --test-dir sim/build --output-on-failure
@@ -79,13 +118,15 @@ chmod +x start.sh
 只审计仿真输出路径，**不含 UI 中文标签**：
 
 ```bash
-# output.cpp 不得把字符串当系统输出
-rg -n '"' sim/src/output.cpp || true
+# output.cpp：排除 #include 行后，函数体内不得有字符串字面量当作系统输出
+rg -n '"' sim/src/output.cpp | rg -v '#include' || true
 # 禁忌语义/意识开关
 rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src || true
 ```
 
-`sim/src/output.cpp` 只产生 `uint16` 比特；`worker`/`ws` 遥测为二进制数值帧。
+说明：`#include "output.h"` 会命中普通 `"` 搜索，**可忽略**；只关心函数体里是否把字符串当输出。
+
+`sim/src/output.cpp` 只产生 `uint16` 比特；遥测为二进制数值帧。
 
 ## 已知风险（阶段 2）
 
@@ -94,12 +135,9 @@ rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src || true
 
 ## GitHub 远程
 
-目标：`https://github.com/666xp/dao-sim`  
-
-若 Cloud Agent 无法 `gh`/`git push` 到 github.com，请在网页新建空库后，本机：
+目标：`https://github.com/666xp/dao-sim`
 
 ```bat
 cd /d D:\dao-sim
-git remote add origin https://github.com/666xp/dao-sim.git
-git push -u origin main
+git pull origin main
 ```

@@ -32,16 +32,18 @@ ConductionReport validate_conduction(const Graph& g, EventQueue& scratch) {
 }
 
 void print_conduction_report(const ConductionReport& r) {
-  auto line = [](bool pass, const char* name, auto value) {
-    std::cout << (pass ? "PASS" : "FAIL") << ": " << name << " " << value << "\n";
+  // Canonical: PASS|FAIL: name value (threshold t)
+  auto line = [](bool pass, const char* name, auto value, auto thr) {
+    std::cout << (pass ? "PASS" : "FAIL") << ": " << name << " " << value << " (threshold " << thr
+              << ")\n";
   };
-  line(r.isolated == 0, "isolated_count", r.isolated);
-  line(!r.left_right_direct, "left_right_direct", r.left_right_direct ? 1 : 0);
+  line(r.isolated == 0, "isolated_count", r.isolated, 0);
+  line(!r.left_right_direct, "left_right_direct", r.left_right_direct ? 1 : 0, 0);
   line(!r.sediment_non_dao_neighbor, "sediment_non_dao_neighbor",
-       r.sediment_non_dao_neighbor ? 1 : 0);
-  line(r.all_cross_via_dao, "all_cross_via_dao", r.all_cross_via_dao ? 1 : 0);
-  line(r.long_delay_ok, "long_delay_delivery", r.long_delay_ok ? 1000000 : 0);
-  line(r.ok, "conduction_ok", r.ok ? 1 : 0);
+       r.sediment_non_dao_neighbor ? 1 : 0, 0);
+  line(r.all_cross_via_dao, "all_cross_via_dao", r.all_cross_via_dao ? 1 : 0, 1);
+  line(r.long_delay_ok, "long_delay_delivery", r.long_delay_ok ? 1000000 : 0, 1000000);
+  line(r.ok, "conduction_ok", r.ok ? 1 : 0, 1);
 }
 
 }  // namespace dao

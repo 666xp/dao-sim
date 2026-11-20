@@ -1,3 +1,4 @@
+#include "bench_format.h"
 #include "metrics.h"
 #include "sim_world.h"
 
@@ -10,7 +11,7 @@ int main(int argc, char** argv) {
   if (argc >= 2) seed = static_cast<uint64_t>(std::stoull(argv[1]));
   if (argc >= 3) ticks = std::stoi(argv[2]);
 
-  constexpr float kRatioMin = 1.25f;  // aligned transport should beat misaligned
+  constexpr float kRatioMin = 1.25f;
 
   dao::SimConfig cfg;
   cfg.seed = seed;
@@ -23,10 +24,10 @@ int main(int argc, char** argv) {
   const float ratio = dao::transport_alternating_ratio(tr);
   const bool pass = ratio >= kRatioMin && (tr.yang_L_to_R + tr.yin_R_to_L) > 100;
 
-  std::cout << "transport seed=" << seed << " ticks=" << ticks << "\n";
-  std::cout << "yang_L_to_R=" << tr.yang_L_to_R << " yin_R_to_L=" << tr.yin_R_to_L
-            << " yang_R_to_L=" << tr.yang_R_to_L << " yin_L_to_R=" << tr.yin_L_to_R << "\n";
-  std::cout << (pass ? "PASS" : "FAIL") << ": lr_alternating_ratio " << ratio
-            << " (threshold " << kRatioMin << ") margin=" << (ratio - kRatioMin) << "\n";
+  dao::bench_note("yang_L_to_R=" + std::to_string(tr.yang_L_to_R) +
+                  " yin_R_to_L=" + std::to_string(tr.yin_R_to_L) +
+                  " yang_R_to_L=" + std::to_string(tr.yang_R_to_L) +
+                  " yin_L_to_R=" + std::to_string(tr.yin_L_to_R));
+  dao::bench_gate(pass, "lr_alternating_ratio", ratio, kRatioMin);
   return pass ? 0 : 1;
 }

@@ -1,0 +1,254 @@
+{
+  "ok": true,
+  "items": [
+    {
+      "status": "PASS",
+      "name": "all_cross_via_dao",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "0",
+      "line": "PASS: all_cross_via_dao 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "conduction_ok",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "0",
+      "line": "PASS: conduction_ok 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "isolated_count",
+      "value": 0.0,
+      "threshold": 0.0,
+      "phase": "0",
+      "line": "PASS: isolated_count 0 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "left_right_direct",
+      "value": 0.0,
+      "threshold": 0.0,
+      "phase": "0",
+      "line": "PASS: left_right_direct 0 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "long_delay_delivery",
+      "value": 1000000.0,
+      "threshold": 1000000.0,
+      "phase": "0",
+      "line": "PASS: long_delay_delivery 1000000 (threshold 1000000)"
+    },
+    {
+      "status": "PASS",
+      "name": "sediment_non_dao_neighbor",
+      "value": 0.0,
+      "threshold": 0.0,
+      "phase": "0",
+      "line": "PASS: sediment_non_dao_neighbor 0 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "dao_D_stable",
+      "value": 1.00891,
+      "threshold": 0.25,
+      "phase": "2",
+      "line": "PASS: dao_D_stable 1.00891 (threshold 0.25)"
+    },
+    {
+      "status": "PASS",
+      "name": "dao_D_stable_with_sigma",
+      "value": 1.05485,
+      "threshold": 0.25,
+      "phase": "2",
+      "line": "PASS: dao_D_stable_with_sigma 1.05485 (threshold 0.25)"
+    },
+    {
+      "status": "PASS",
+      "name": "dao_amp_ratio",
+      "value": 1.1382,
+      "threshold": 0.25,
+      "phase": "2",
+      "line": "PASS: dao_amp_ratio 1.1382 (threshold 0.25)"
+    },
+    {
+      "status": "PASS",
+      "name": "dao_isolated_oscillation",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "2",
+      "line": "PASS: dao_isolated_oscillation 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "dao_zc",
+      "value": 76.0,
+      "threshold": 2.0,
+      "phase": "2",
+      "line": "PASS: dao_zc 76 (threshold 2)"
+    },
+    {
+      "status": "PASS",
+      "name": "field_modulation",
+      "value": 0.293274,
+      "threshold": 0.08,
+      "phase": "2",
+      "line": "PASS: field_modulation 0.293274 (threshold 0.08)"
+    },
+    {
+      "status": "PASS",
+      "name": "field_modulation_with_sigma",
+      "value": 0.381568,
+      "threshold": 0.08,
+      "phase": "2",
+      "line": "PASS: field_modulation_with_sigma 0.381568 (threshold 0.08)"
+    },
+    {
+      "status": "PASS",
+      "name": "fields_roche_integration",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "2",
+      "line": "PASS: fields_roche_integration 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "sigma_g_bounded",
+      "value": 1.00037,
+      "threshold": 0.5,
+      "phase": "2",
+      "line": "PASS: sigma_g_bounded 1.00037 (threshold 0.5)"
+    },
+    {
+      "status": "PASS",
+      "name": "sigma_slow_control",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "2",
+      "line": "PASS: sigma_slow_control 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "ablation_A_dao_adapt",
+      "value": 0.0,
+      "threshold": 42.0,
+      "phase": "3",
+      "line": "PASS: ablation_A_dao_adapt 0 (threshold 42)"
+    },
+    {
+      "status": "PASS",
+      "name": "ablation_A_global_rate_ratio",
+      "value": 2.17313,
+      "threshold": 0.45,
+      "phase": "3",
+      "line": "PASS: ablation_A_global_rate_ratio 2.17313 (threshold 0.45)"
+    },
+    {
+      "status": "PASS",
+      "name": "ablation_B_noise_convergence",
+      "value": 0.00171875,
+      "threshold": 0.0,
+      "phase": "3",
+      "line": "PASS: ablation_B_noise_convergence 0.00171875 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "ablation_C_east_perturb",
+      "value": 0.3075,
+      "threshold": 0.05,
+      "phase": "3",
+      "line": "PASS: ablation_C_east_perturb 0.3075 (threshold 0.05)"
+    },
+    {
+      "status": "PASS",
+      "name": "bitstream_nonzero",
+      "value": 1533.0,
+      "threshold": 30.0,
+      "phase": "3",
+      "line": "PASS: bitstream_nonzero 1533 (threshold 30)"
+    },
+    {
+      "status": "PASS",
+      "name": "lr_alternating_ratio",
+      "value": 2.31143,
+      "threshold": 1.25,
+      "phase": "3",
+      "line": "PASS: lr_alternating_ratio 2.31143 (threshold 1.25)"
+    },
+    {
+      "status": "PASS",
+      "name": "ones_density_band",
+      "value": 0.0266987,
+      "threshold": 0.02,
+      "phase": "3",
+      "line": "PASS: ones_density_band 0.0266987 (threshold 0.02)"
+    },
+    {
+      "status": "PASS",
+      "name": "ones_stats_similar",
+      "value": 0.00051282,
+      "threshold": 0.25,
+      "phase": "3",
+      "line": "PASS: ones_stats_similar 0.00051282 (threshold 0.25)"
+    },
+    {
+      "status": "PASS",
+      "name": "output_nonpreset",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "3",
+      "line": "PASS: output_nonpreset 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "phase3_ablations",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "3",
+      "line": "PASS: phase3_ablations 1 (threshold 1)"
+    },
+    {
+      "status": "PASS",
+      "name": "sequences_differ",
+      "value": 0.0528419,
+      "threshold": 0.03,
+      "phase": "3",
+      "line": "PASS: sequences_differ 0.0528419 (threshold 0.03)"
+    },
+    {
+      "status": "PASS",
+      "name": "audit_forbidden_semantics",
+      "value": 0.0,
+      "threshold": 0.0,
+      "phase": "4",
+      "line": "PASS: audit_forbidden_semantics 0 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "audit_output_strings",
+      "value": 0.0,
+      "threshold": 0.0,
+      "phase": "4",
+      "line": "PASS: audit_output_strings 0 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "audit_telemetry_no_text",
+      "value": 0.0,
+      "threshold": 0.0,
+      "phase": "4",
+      "line": "PASS: audit_telemetry_no_text 0 (threshold 0)"
+    },
+    {
+      "status": "PASS",
+      "name": "phase4_audit_complete",
+      "value": 1.0,
+      "threshold": 1.0,
+      "phase": "4",
+      "line": "PASS: phase4_audit_complete 1 (threshold 1)"
+    }
+  ],
+  "inject_fail": false
+}

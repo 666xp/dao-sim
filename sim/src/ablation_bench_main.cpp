@@ -1,3 +1,4 @@
+#include "bench_format.h"
 #include "metrics.h"
 #include "sim_world.h"
 
@@ -26,9 +27,6 @@ RunResult run_world(uint64_t seed, int ticks, int warmup, dao::AblationFlags abl
   world.set_ablation(abl);
   world.reset_transport();
   RunResult r;
-  r.D.reserve(static_cast<size_t>(ticks - warmup));
-  r.bits.reserve(static_cast<size_t>(ticks - warmup));
-  r.global_rates.reserve(static_cast<size_t>(ticks - warmup));
   for (int t = 0; t < ticks; ++t) {
     if (perturb_c && t == warmup + 200) world.perturb(dao::Region::East, 50);
     world.step(1);
@@ -57,7 +55,6 @@ int main(int argc, char** argv) {
   dao::AblationFlags base{};
   base.dao_adaptation = true;
   base.noise = true;
-
   const RunResult ctrl = run_world(seed, ticks, warmup, base, false);
 
   dao::AblationFlags a = base;
@@ -66,7 +63,6 @@ int main(int argc, char** argv) {
 
   dao::AblationFlags b = base;
   b.noise = false;
-  // Multi-seed for B: compare pairwise Hamming with noise on vs off
   const RunResult b42 = run_world(42, ticks, warmup, b, false);
   const RunResult b7 = run_world(7, ticks, warmup, b, false);
   const RunResult c42 = run_world(42, ticks, warmup, base, false);
@@ -75,42 +71,30 @@ int main(int argc, char** argv) {
   const float ham_noise_off = dao::hamming_fraction(b42.bits, b7.bits);
 
   const RunResult abl_c = run_world(seed, ticks, warmup, base, true);
-  // Compare post-perturb window edit distance vs control same window length
   const size_t win = std::min<size_t>(400, std::min(ctrl.bits.size(), abl_c.bits.size()));
   std::vector<uint16_t> ctrl_tail(ctrl.bits.end() - static_cast<long>(win), ctrl.bits.end());
   std::vector<uint16_t> c_tail(abl_c.bits.end() - static_cast<long>(win), abl_c.bits.end());
   const int ed = dao::edit_distance_u16(ctrl_tail, c_tail);
   const float ed_frac = win ? static_cast<float>(ed) / static_cast<float>(win) : 0.0f;
 
-  // Gates
-  const bool a_rhythm = abl_a.zc < std::max(2, ctrl.zc / 3) || abl_a.alt_ratio < 0.85f * std::max(1.0f, ctrl.alt_ratio);
+  const float global_ratio =
+      (ctrl.mean_global > 1e-9f) ? (abl_a.mean_global / ctrl.mean_global) : 0.0f;
+
+  const bool a_rhythm =
+      abl_a.zc < std::max(2, ctrl.zc / 3) || abl_a.alt_ratio < 0.85f * std::max(1.0f, ctrl.alt_ratio);
   const bool a_not_global_collapse = abl_a.mean_global > 0.45f * ctrl.mean_global;
   const bool a_bits_changed = dao::hamming_fraction(ctrl.bits, abl_a.bits) > 0.02f;
   const bool pass_a = a_rhythm && a_not_global_collapse && a_bits_changed;
-
-  // Noise off should not increase cross-seed divergence (allow tiny float slack).
   const bool pass_b = ham_noise_off <= ham_noise_on * 1.02f + 0.002f;
   const bool pass_c = ed_frac > 0.05f;
-
-  std::cout << "ablation seed=" << seed << " ticks=" << ticks << " warmup=" << warmup << "\n";
-  std::cout << "ctrl: zc=" << ctrl.zc << " alt_ratio=" << ctrl.alt_ratio
-            << " global_rate=" << ctrl.mean_global << "\n";
-  std::cout << "A: zc=" << abl_a.zc << " alt_ratio=" << abl_a.alt_ratio
-            << " global_rate=" << abl_a.mean_global
-            << " hamming_vs_ctrl=" << dao::hamming_fraction(ctrl.bits, abl_a.bits) << "\n";
-  std::cout << "B: hamming_noise_on_42vs7=" << ham_noise_on
-            << " hamming_noise_off_42vs7=" << ham_noise_off << "\n";
-  std::cout << "C: edit_frac_tail=" << ed_frac << " (win=" << win << ")\n";
-
-  std::cout << (pass_a ? "PASS" : "FAIL") << ": ablation_A_dao_adapt "
-            << (a_rhythm ? "rhythm_drop_ok" : "rhythm_drop_fail") << " "
-            << (a_not_global_collapse ? "global_ok" : "global_collapse") << " "
-            << (a_bits_changed ? "bits_ok" : "bits_fail") << "\n";
-  std::cout << (pass_b ? "PASS" : "FAIL") << ": ablation_B_noise_convergence "
-            << "delta_hamming=" << (ham_noise_on - ham_noise_off) << "\n";
-  std::cout << (pass_c ? "PASS" : "FAIL") << ": ablation_C_east_perturb edit_frac=" << ed_frac
-            << "\n";
   const bool pass = pass_a && pass_b && pass_c;
-  std::cout << (pass ? "PASS" : "FAIL") << ": phase3_ablations\n";
+
+  dao::bench_note("ablation_A: u-adaptation off raises dao excitability; global_rate rise is expected "
+                  "if bounded (see ratio)");
+  dao::bench_gate(pass_a, "ablation_A_dao_adapt", abl_a.zc, static_cast<double>(std::max(2, ctrl.zc / 3)));
+  dao::bench_gate(a_not_global_collapse, "ablation_A_global_rate_ratio", global_ratio, 0.45);
+  dao::bench_gate(pass_b, "ablation_B_noise_convergence", ham_noise_on - ham_noise_off, 0.0);
+  dao::bench_gate(pass_c, "ablation_C_east_perturb", ed_frac, 0.05);
+  dao::bench_gate(pass, "phase3_ablations", pass ? 1 : 0, 1);
   return pass ? 0 : 1;
 }

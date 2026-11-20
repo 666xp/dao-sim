@@ -189,7 +189,8 @@ export default function App() {
         <span className="badge">非实时 · 按 tick 推进</span>
       </h1>
       <p className="sub">
-        仿脑—星系脉冲动力监测台 · 引擎 ws://127.0.0.1:3848 · 状态：{status} · tick {tick}
+        仿脑—星系脉冲动力监测台 · 引擎 ws://127.0.0.1:3848 · 状态：{status} · tick {tick} ·{" "}
+        <a href="/lights">红绿灯</a>
       </p>
 
       <div className="toolbar">

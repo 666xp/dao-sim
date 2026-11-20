@@ -5,36 +5,27 @@
 
 本仓库不声称系统具有意识；只验证：无外部输入时，临界附近的高维动力系统能否自发冒出非写死的原始事件，且消融实验有因果响应。
 
-## 本机路径
+## 诚实边界
 
-推荐 Windows 工作目录：
+- 不宣称意识、语义理解或「开关键」；UI 中文只是监测标签。
+- 阶段 1 可用 `--fake` 测管道；阶段 2+ 用真动力学（不要 `--fake`）。
+- 输出稀疏（ones≈0.027）时，汉明距离单独看没有意义，须与 1 的比例、多种子统计一并解读。
+
+## 本机路径
 
 ```bat
 git clone https://github.com/666xp/dao-sim.git D:\dao-sim
 cd /d D:\dao-sim
 ```
 
-## 架构
+## 架构与规模
 
-- `sim/`：C++17 仿真核（`sim_core` 静态库 + `sim_validate` 验收 CLI + `sim_engine` WebSocket 引擎）
-- `web/`：Vite + React 监测台（只收和画，不参与动力学）
-- 引擎：`ws://127.0.0.1:3848` · 前端：`http://127.0.0.1:3847`
+- `sim/`：C++17 核（`sim_core` / `sim_validate` / `sim_engine` / 各 `*_bench`）
+- `web/`：Vite + React 监测台 + `/lights` 红绿灯
+- 引擎 `ws://127.0.0.1:3848` · 前端 `http://127.0.0.1:3847`
+- 规模：沉淀核 2×256 + 道核 2×64 + 六方位 6×64 + 输出 12 ≈ **1036** 神经元
 
-CMake 开关：
-
-| 选项 | 默认 | 含义 |
-|------|------|------|
-| `DAO_SIM_BUILD_DYNAMICS` | ON | 阶段 2+：道核/Roche/σ/`sim_world`；关闭后只留导通层 |
-| `DAO_SIM_BUILD_ENGINE` | ON | WebSocket 引擎（需要 DYNAMICS=ON） |
-| `DAO_SIM_BUILD_TESTS` | ON | Catch2 单测 |
-
-## 依赖
-
-- CMake ≥ 3.16、C++17 编译器
-- Node.js ≥ 18（前端）
-- Catch2 v3.5.4、IXWebSocket v11.4.4 已 vendoring 在 `sim/third_party/`，**配置阶段不访问 GitHub**
-
-若本机曾因 FetchContent / GitHub 失败留下残缺目录，先清再建：
+Catch2 / IXWebSocket 已 vendor 于 `sim/third_party/`（配置不访问 GitHub）。
 
 ```bat
 rmdir /s /q sim\build
@@ -42,150 +33,102 @@ cmake -S sim -B sim\build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
 cmake --build sim\build --config Debug
 ```
 
-## 阶段 0 验收（导通层绿灯）
+## Bench 行格式（阶段 4 定型）
 
-只验证图 / 事件队列 / 神经元骨架 / `sim_validate`。  
-**不**编引擎、**不**跑 `test_dao_oscillation` / `test_criticality`（那是阶段 2）。
+一行一项，可被 `scripts/collect_lights.py` 解析：
 
-Windows（`D:\dao-sim`）：
+```text
+PASS|FAIL: <name> <value> (threshold <t>)
+```
+
+元信息用 `NOTE: ...`，不进红绿灯。
+
+## 阶段速览
+
+| 阶段 | 内容 | 入口 |
+|------|------|------|
+| 0 | 导通层 | `scripts\verify_phase0.bat` / `sim_validate` |
+| 1 | 假遥测管道 | `start.bat`（`--fake`）→ 浏览器曲线 |
+| 2 | 道核隔离 → 场+Roche → σ | `sim_dao_bench` / `sim_fields_bench` / `sim_sigma_bench` |
+| 3 | 转运比 / 12bit / 消融 A·B·C | `sim_transport_bench` / `sim_output_bench` / `sim_ablation_bench` |
+| 4 | 审计 + 红绿灯 | `scripts\audit.bat` · `python scripts\collect_lights.py` · `http://127.0.0.1:3847/lights` |
+
+### 阶段 0
 
 ```bat
 scripts\verify_phase0.bat
 ```
 
-Linux/macOS：
+`ctest` 2 Passed + `sim_validate` 6 行 PASS + exit 0。
 
-```bash
-chmod +x scripts/verify_phase0.sh
-./scripts/verify_phase0.sh
-```
-
-等价手动命令（MSVC 多配置务必带 `-C Debug`）：
+### 阶段 1
 
 ```bat
-cmake -S sim -B sim/build-phase0 -DDAO_SIM_BUILD_ENGINE=OFF -DDAO_SIM_BUILD_DYNAMICS=OFF
-cmake --build sim/build-phase0 --config Debug -j
-ctest --test-dir sim/build-phase0 -C Debug --output-on-failure
-sim\build-phase0\Debug\sim_validate.exe 42
-```
-
-通过标准（阶段 4 红绿灯输入格式，定型后不再改）：`ctest` 2 项 Passed（`test_graph`、`test_queue_long_delay`）+ `sim_validate` 6 行 PASS + 退出码 0。
-
-## 阶段 1：假遥测管道（C++ → WebSocket → 浏览器曲线）
-
-**目标只有一条**：浏览器打开 `http://127.0.0.1:3847`，D / sigma 曲线在动；Pause 停、Start 继续、Step 1000 跳一段。  
-不接道核、不验证动力学、不要求输出比特非零。
-
-```bat
-git pull
-rmdir /s /q sim\build
-cmake -S sim -B sim\build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
-cmake --build sim\build --config Debug
-npm --prefix web install
 start.bat
 ```
 
-- 引擎：`ws://127.0.0.1:3848`（`sim_engine --fake`）
-- 前端：`http://127.0.0.1:3847`
-- `start.bat` 优先找 `sim\build\Debug\sim_engine.exe`，其次 Release；找不到则报错退出
-- **Step 仅在 Pause 后有效**；`step n` 上限 10000；快进后只推一帧，曲线 x 轴按 tick 跳一段属预期
-- **云端冒烟 ≠ 阶段 1 验收通过**；最终以本机浏览器曲线动作为准
+浏览器：D/σ 曲线动；Pause/Start/Step（先 Pause 再 Step）。
 
-## 构建与运行（完整产品）
-
-默认打开动力学 + 引擎：
-
-```bash
-# 引擎 + 全部测试（含阶段 2）
-cmake -S sim -B sim/build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
-cmake --build sim/build --config Debug -j
-ctest --test-dir sim/build -C Debug --output-on-failure
-
-# 导通层验收（PASS/FAIL 行）
-./sim/build/sim_validate 42   # 或 sim/build/Debug/sim_validate.exe
-
-# 前端
-npm --prefix web install
-npm --prefix web run dev
-
-# 或一键：先引擎（假遥测）再前端
-# Windows: start.bat
-# Linux/macOS: ./start.sh
-```
-
-假遥测（只测管道）：
-
-```bash
-./sim/build/sim_engine --fake
-# Windows Debug: sim\build\Debug\sim_engine.exe --fake
-```
-
-## 拓扑硬约束
-
-| 区域 | 规模 | 连接 |
-|------|------|------|
-| 左/右沉淀核 | 各 256 | **只与道核双向**；彼此无边；不接方位群 |
-| 道核阳/阴 | 各 64 | 互抑半中心；跨核唯一通道 |
-| 东/西/南/北/上/下 | 各 64 | 与道核双向；群间稀疏 |
-| 输出群 | 12（南群独立子集） | 与道核双向；不参与 σ 控制 |
-
-## 控制协议（JSON → 引擎）
-
-`start` / `pause` / `step{n}` / `seed{value}` /  
-`ablation{name:dao_adaptation|noise,on}`（`dao_adaptation` **仅**作用于 DaoYang/DaoYin）/  
-`perturb{group:east,pulses:50}` / `param{name:g,value}`
-
-## 消融
-
-- A：关闭道核适应电流 → 交替节律应破坏  
-- B：关闭噪声 → 多种子输出更趋同  
-- C：向东群注入 50 脉冲 → 输出模式编辑距离上升  
-
-## 代码审计范围
-
-只审计仿真输出路径，**不含 UI 中文标签**：
-
-```bash
-# output.cpp：排除 #include 行后，函数体内不得有字符串字面量当作系统输出
-rg -n '"' sim/src/output.cpp | rg -v '#include' || true
-# 禁忌语义/意识开关
-rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src || true
-```
-
-说明：`#include "output.h"` 会命中普通 `"` 搜索，**可忽略**；只关心函数体里是否把字符串当输出。
-
-`sim/src/output.cpp` 只产生 `uint16` 比特；遥测为二进制数值帧。
-
-## 已知风险（阶段 2）
-
-阶段 2 顺序（隔离 → 集成）：
-
-1. **道核单独起振**（已过）：`sim_dao_bench 42 2000` → `PASS: dao_isolated_oscillation`
-2. **六方位 + 沉淀核 + Roche**（先关 σ）：`sim_fields_bench 42 3000 500` → `PASS: fields_roche_integration`
-3. **σ 慢控接入**（池排除道核/输出，`tau_sec=5`）：`sim_sigma_bench 42 5000 1000` → `PASS: sigma_slow_control`
-4. **阶段 3**：左右转运比 / 输出 12 bit / 消融 A·B·C
+### 阶段 2 / 3 benches
 
 ```bat
+sim\build\Debug\sim_dao_bench.exe 42 2000
+sim\build\Debug\sim_fields_bench.exe 42 3000 500
+sim\build\Debug\sim_sigma_bench.exe 42 5000 1000
 sim\build\Debug\sim_transport_bench.exe 42 4000
 sim\build\Debug\sim_output_bench.exe 4000 500
 sim\build\Debug\sim_ablation_bench.exe 42 5000
 ```
 
-- 转运：`PASS: lr_alternating_ratio`（阳 L→道→R / 阴 R→道→L）
-- 输出：多种子非零、1 比例相近、序列互异（`PASS: output_nonpreset`）
-- 消融 A：关道核适应 → 过零骤降且全局放电不崩；B：关噪声 → 多种子更趋同；C：东群 50 脉冲 → 输出尾窗编辑距离上升
-- 快进 N tick：监测台已有（Pause 后快进）
+### 阶段 4：审计 + 红绿灯
 
-风险备忘：
+```bat
+python scripts\audit.py
+python scripts\collect_lights.py --out web\public\lights.json
+python scripts\collect_lights.py --inject-fail --out web\public\lights.fail.json
+npm --prefix web run dev
+```
 
-1. **道核半中心起振**：阳 `a=0.02`、阴 `a=0.1`；不够则只调道核，别在全网里盲调。  
-2. **ODE** 只作面板包络，不与 SNN 逐点对齐。  
-3. **σ 慢控**须秒级，否则会压掉道核（`SimConfig::sigma_control`）。  
-4. 消融 A 只关道核 `u`，禁止全局 `u=0`。
+打开 `http://127.0.0.1:3847/lights`：应全绿；点「加载失败样例」应出现红项（证明面板在读数值，不是默认全绿）。
 
-## GitHub 远程
+审计清单（`scripts/audit.py`）：
 
-目标：`https://github.com/666xp/dao-sim`
+1. `sim/src/output.cpp` 排除 `#include`/注释后无字符串字面量作输出  
+2. `sim/src` 无 `conscious` / `意识开关` / `semantic_map` / `neuron_to_word`  
+3. `telemetry.h/.cpp` 无 `std::string` / 文本字段（遥测为二进制数值帧）
+
+## 消融说明
+
+- **A（仅 DaoYang/DaoYin 关适应）**：`u` 是负反馈；关掉后道核更兴奋、外投射增强，**全局放电率不降反升是预期**，不是 bug。须确认升幅有界——验收记录示例：`ablation_A_global_rate_ratio ≈ 2.2（threshold 0.45，有界）`。若翻很多倍，归因会被全局失控污染。  
+- **B**：关噪声 → 多种子比特更趋同。  
+- **C**：东群 50 脉冲 → 输出尾窗编辑距离上升。  
+- 监测台可取消勾选「道核适应电流」/「内在噪声」，或点「扰动东群」；长跑用 Pause + 快进 N tick。
+
+## 输出「非预设」怎么读
+
+12 bit、`ones≈0.027` 时平均每帧约 0.32 个 1，随机期望汉明距离本身就在 ~0.05。  
+因此红绿灯里 **三项一组**：`ones_density_band` + `ones_stats_similar` + `sequences_differ`，不要单看汉明。
+
+## 拓扑硬约束
+
+| 区域 | 规模 | 连接 |
+|------|------|------|
+| 左/右沉淀核 | 各 256 | 只与道核双向 |
+| 道核阳/阴 | 各 64 | 互抑半中心 |
+| 东/西/南/北/上/下 | 各 64 | 与道核双向 |
+| 输出群 | 12 | 与道核双向；不进 σ 池 |
+
+## 已知风险
+
+1. 道核半中心起振不够 → 只调道核，别在全网盲调。  
+2. ODE 只作包络。  
+3. σ 须秒级（`tau_sec=5`），否则压道核。  
+4. 消融 A 只关道核 `u`；全局放电上升须有界。  
+5. 稀疏输出下汉明须与 ones 统计联读。
+
+## GitHub
+
+`https://github.com/666xp/dao-sim`
 
 ```bat
 cd /d D:\dao-sim

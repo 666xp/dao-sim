@@ -129,7 +129,7 @@ void SimWorld::step_one() {
     if (r == Region::RightSediment) I += 3.0f - 4.0f * Dprev * crit_.g;
 
     // Cardinals: tonic bias so they fire, plus D-phase modulation ("breathe with D").
-    if (is_cardinal_region(r)) I += 3.2f + 4.5f * Dprev * crit_.g;
+    if (is_cardinal_region(r)) I += 3.5f + 5.5f * Dprev * crit_.g;
 
     if (ablation_.noise) I += 0.8f * noise_dist(rng_);
 

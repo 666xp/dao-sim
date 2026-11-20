@@ -10,3 +10,4 @@ compile_commands.json
 .vscode/
 .idea/
 sim/build-phase0/
+*.tsbuildinfo

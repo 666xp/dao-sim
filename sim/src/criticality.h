@@ -11,7 +11,7 @@ struct CriticalityController {
   float g = 1.0f;           // global excitatory gain on sigma pool
   float target_lo = 0.9f;
   float target_hi = 1.1f;
-  float tau_sec = 2.0f;     // slow timescale
+  float tau_sec = 5.0f;     // slow timescale (seconds); must stay >> neuron ms scale
   float sigma = 1.0f;
   uint64_t window_spikes_parent = 0;
   uint64_t window_spikes_child = 0;

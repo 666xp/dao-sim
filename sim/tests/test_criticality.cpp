@@ -13,16 +13,16 @@ TEST_CASE("sigma pool excludes dao and output", "[criticality]") {
 TEST_CASE("slow g control moves toward band", "[criticality]") {
   dao::CriticalityController c;
   c.g = 1.0f;
-  c.sigma = 0.5f;
-  c.window_spikes_parent = 100;
-  c.window_spikes_child = 50;  // will set sigma near 0.5 then ema
-  // Force low sigma then control.
+  c.tau_sec = 5.0f;
+  // Force low normalized sigma then control (child/parent/fanout_ref << 1).
   c.sigma = 0.5f;
   const float g0 = c.g;
-  for (int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 40; ++i) {
     c.window_spikes_parent = 10;
-    c.window_spikes_child = 5;
+    c.window_spikes_child = 5;  // raw 0.5 / 3.5 => low inst
     dao::criticality_end_window_and_control(c, 1000.0f);  // 1s windows
   }
   REQUIRE(c.g > g0);
+  REQUIRE(c.g <= 2.0f);
+  REQUIRE(c.g >= 0.5f);
 }

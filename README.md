@@ -161,8 +161,9 @@ rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src || true
 阶段 2 顺序（隔离 → 集成）：
 
 1. **道核单独起振**（已过）：`sim_dao_bench 42 2000` → `PASS: dao_isolated_oscillation`
-2. **六方位 + 沉淀核 + Roche**（先关 σ）：`sim_fields_bench 42 3000 500` → `PASS: fields_roche_integration`（D 仍稳且方位放电率与 D 相关）
-3. 再接 σ 慢控 → 输出 12 bit → 消融 A/B/C
+2. **六方位 + 沉淀核 + Roche**（先关 σ）：`sim_fields_bench 42 3000 500` → `PASS: fields_roche_integration`
+3. **σ 慢控接入**（池排除道核/输出，`tau_sec=2`）：`sim_sigma_bench 42 5000 1000` → `PASS: sigma_slow_control`（D 仍过零、方位仍呼吸、g 不失控）
+4. 再接输出 12 bit → 消融 A/B/C
 
 风险备忘：
 

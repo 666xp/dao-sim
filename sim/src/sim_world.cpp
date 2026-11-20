@@ -49,7 +49,7 @@ void SimWorld::set_seed(uint64_t seed) {
 
 void SimWorld::set_ablation(const AblationFlags& f) { ablation_ = f; }
 
-void SimWorld::set_g(float g) { crit_.g = std::clamp(g, 0.2f, 3.0f); }
+void SimWorld::set_g(float g) { crit_.g = std::clamp(g, 0.5f, 2.0f); }
 
 void SimWorld::perturb(Region group, uint32_t pulses) {
   std::vector<uint32_t> ids;

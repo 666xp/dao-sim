@@ -220,12 +220,24 @@ TelemetrySample SimWorld::sample() const {
   t.D_ode = dao_ode_phase(ode_);
   t.sigma = crit_.sigma;
   t.g = crit_.g;
-  for (int i = 0; i < 6; ++i) t.rates[i] = region_rate(cardinal_by_index(i));
-  uint32_t spiked_n = 0;
-  for (uint32_t i = 0; i < graph_.n; ++i) {
-    if (spiked_[i]) ++spiked_n;
+  if (cfg_.fake_telemetry) {
+    // Phase-1 pipe demo: synthesize six-direction rates that breathe with D.
+    const float D = dao_state_.D;
+    const float tk = static_cast<float>(tick_);
+    for (int i = 0; i < 6; ++i) {
+      const float phase = 0.4f * static_cast<float>(i);
+      const float wobble = 0.5f + 0.5f * std::sin(0.007f * tk + phase);
+      t.rates[i] = std::max(0.0f, 0.04f + 0.10f * wobble * (0.55f + 0.45f * D));
+    }
+    t.global_rate = 0.02f + 0.01f * std::fabs(D);
+  } else {
+    for (int i = 0; i < 6; ++i) t.rates[i] = region_rate(cardinal_by_index(i));
+    uint32_t spiked_n = 0;
+    for (uint32_t i = 0; i < graph_.n; ++i) {
+      if (spiked_[i]) ++spiked_n;
+    }
+    t.global_rate = graph_.n ? static_cast<float>(spiked_n) / static_cast<float>(graph_.n) : 0.0f;
   }
-  t.global_rate = graph_.n ? static_cast<float>(spiked_n) / static_cast<float>(graph_.n) : 0.0f;
   t.out_bits = recent_bits_.empty() ? 0 : recent_bits_.back();
   return t;
 }

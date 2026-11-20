@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -22,6 +23,16 @@ int main(int argc, char** argv) {
   if (argc >= 3) ticks = std::stoi(argv[2]);
   if (argc >= 4) warmup = std::stoi(argv[3]);
   if (ticks < warmup + 100) ticks = warmup + 100;
+
+  // Gates (also printed so phase-4 lights / margin checks share one source of truth).
+  constexpr int kZcMin = 2;
+  constexpr float kAmpFloor = 0.01f;
+  constexpr float kAmpRatioMin = 0.25f;
+  constexpr float kBreathCorr = 0.08f;
+  constexpr float kBreathAxis = 0.05f;
+  constexpr int kBreathAxisCount = 4;
+  constexpr float kBreathMeanFallback = 0.05f;
+  constexpr float kComfortMargin = 0.05f;  // above gate → "comfortable", else "thin"
 
   dao::SimConfig cfg;
   cfg.seed = seed;
@@ -77,24 +88,39 @@ int main(int argc, char** argv) {
   }
   const float corr_mean = dao::pearson(D, mean_rate);
 
-  const bool pass_d = zc >= 2 && amp_second > 0.01f && amp_second > 0.25f * amp_first;
-  // Threshold 0.08: MSVC/Clang float paths differ; require clear but not brittle coupling.
-  int n_pos = 0;
+  const bool pass_d =
+      zc >= kZcMin && amp_second > kAmpFloor && amp_second > kAmpRatioMin * amp_first;
+  int n_axis = 0;
   for (int k = 0; k < 6; ++k) {
-    if (std::fabs(corr[k]) >= 0.05f) ++n_pos;
+    if (std::fabs(corr[k]) >= kBreathAxis) ++n_axis;
   }
-  const bool pass_breath =
-      max_abs_corr >= 0.08f || std::fabs(corr_mean) >= 0.08f || (n_pos >= 4 && corr_mean > 0.05f);
+  const bool breath_by_max = max_abs_corr >= kBreathCorr;
+  const bool breath_by_mean = std::fabs(corr_mean) >= kBreathCorr;
+  const bool breath_by_axes = n_axis >= kBreathAxisCount && corr_mean > kBreathMeanFallback;
+  const bool pass_breath = breath_by_max || breath_by_mean || breath_by_axes;
   const bool pass = pass_d && pass_breath;
 
+  const float breath_metric = std::max(max_abs_corr, std::fabs(corr_mean));
+  const float breath_margin = breath_metric - kBreathCorr;
+  const char* breath_margin_tag =
+      (!pass_breath) ? "below_gate" : (breath_margin >= kComfortMargin ? "comfortable" : "thin");
+
+  std::cout << std::setprecision(6);
   std::cout << "fields=1 sigma_control=0 neurons=" << world.graph().n << " seed=" << seed
             << " ticks=" << ticks << " warmup=" << warmup << "\n";
-  std::cout << "zc=" << zc << " D_min=" << d_min << " D_max=" << d_max
+  std::cout << "D: zc=" << zc << " (min " << kZcMin << ") D_min=" << d_min << " D_max=" << d_max
             << " amp_first=" << amp_first << " amp_second=" << amp_second
-            << " amp_ratio=" << amp_ratio << "\n";
-  std::cout << "corr_mean=" << corr_mean << " max_abs_corr=" << max_abs_corr;
+            << " amp_ratio=" << amp_ratio << " (min " << kAmpRatioMin << ")\n";
+  std::cout << "breath: corr_mean=" << corr_mean << " max_abs_corr=" << max_abs_corr
+            << " n_axis_ge_" << kBreathAxis << "=" << n_axis;
   for (int k = 0; k < 6; ++k) std::cout << " corr_" << names[k] << "=" << corr[k];
   std::cout << "\n";
+  std::cout << (pass_d ? "PASS" : "FAIL") << ": dao_D_stable zc=" << zc
+            << " amp_ratio=" << amp_ratio << " (threshold amp_ratio>=" << kAmpRatioMin
+            << " amp_second>" << kAmpFloor << ")\n";
+  std::cout << (pass_breath ? "PASS" : "FAIL") << ": field_modulation " << breath_metric
+            << " (threshold " << kBreathCorr << ") margin=" << breath_margin << " ["
+            << breath_margin_tag << "]\n";
   std::cout << (pass ? "PASS" : "FAIL") << ": fields_roche_integration "
             << (pass_d ? "D_ok" : "D_fail") << " " << (pass_breath ? "breath_ok" : "breath_fail")
             << "\n";

@@ -8,12 +8,10 @@ TEST_CASE("dao D continues zero-crossing without decay", "[dao]") {
   cfg.seed = 42;
   cfg.dt_ms = 1.0f;
   cfg.fake_telemetry = false;
-  dao::SimWorld world(cfg);
+  cfg.dao_only = true;  // isolate half-center; no fields / sigma / Roche
 
   std::vector<float> D;
   D.reserve(2000);
-  world.step(2000);
-  // Collect from a fresh run with sampling each tick — re-run with manual loop.
   dao::SimWorld w2(cfg);
   for (int i = 0; i < 2000; ++i) {
     w2.step(1);

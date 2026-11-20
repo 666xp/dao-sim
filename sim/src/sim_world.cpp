@@ -25,7 +25,7 @@ Region cardinal_by_index(int i) {
 SimWorld::SimWorld(SimConfig cfg) : cfg_(cfg), rng_(cfg.seed) { rebuild(); }
 
 void SimWorld::rebuild() {
-  graph_ = build_default_graph(cfg_.seed);
+  graph_ = cfg_.dao_only ? build_dao_only_graph(cfg_.seed) : build_default_graph(cfg_.seed);
   neurons_ = build_neurons(graph_);
   I_syn_.assign(graph_.n, 0.0f);
   spiked_.assign(graph_.n, 0);
@@ -153,8 +153,9 @@ void SimWorld::step_one() {
         const bool dao_to_pool = is_dao_region(graph_.region[i]) && dst_pool;
         if (e.sign > 0 && (src_pool || dao_to_pool)) amp *= crit_.g;
 
-        // Roche shaping for dao-related edges.
-        if (is_dao_region(graph_.region[i]) || is_dao_region(graph_.region[e.dst])) {
+        // Roche shaping for dao-related edges (skipped in dao_only isolation).
+        if (!cfg_.dao_only &&
+            (is_dao_region(graph_.region[i]) || is_dao_region(graph_.region[e.dst]))) {
           amp *= roche_weight(graph_.region[i], graph_.region[e.dst], i % 64, e.dst % 64, 64, 64);
         }
 
@@ -173,7 +174,8 @@ void SimWorld::step_one() {
   // ODE envelope: weak coupling from SNN D, not pointwise lock.
   dao_ode_step(ode_, cfg_.dt_ms, 0.02f * dao_state_.D);
 
-  if (tick_ % 50ull == 0) {
+  // Isolated dao bench: do not let empty sigma pool drift g.
+  if (!cfg_.dao_only && tick_ % 50ull == 0) {
     criticality_end_window_and_control(crit_, 50.0f * cfg_.dt_ms);
   }
 

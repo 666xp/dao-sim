@@ -35,6 +35,9 @@ struct Graph {
 
 Graph build_default_graph(uint64_t seed);
 
+// Phase-2 isolation: DaoYang+DaoYin only (half-center), no sediments/cardinals/output.
+Graph build_dao_only_graph(uint64_t seed);
+
 bool has_left_right_direct_edge(const Graph& g);
 bool sediment_has_non_dao_neighbor(const Graph& g);
 bool all_cross_paths_via_dao(const Graph& g);

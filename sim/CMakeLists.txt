@@ -41,6 +41,11 @@ target_include_directories(sim_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(sim_validate src/validate_main.cpp)
 target_link_libraries(sim_validate PRIVATE sim_core)
 
+if(DAO_SIM_BUILD_DYNAMICS)
+  add_executable(sim_dao_bench src/dao_bench_main.cpp)
+  target_link_libraries(sim_dao_bench PRIVATE sim_core)
+endif()
+
 # Vendored deps under sim/third_party — no FetchContent / no GitHub at configure time.
 if(DAO_SIM_BUILD_ENGINE)
   find_package(Threads REQUIRED)

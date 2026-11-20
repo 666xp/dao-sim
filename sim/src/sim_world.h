@@ -23,6 +23,7 @@ struct SimConfig {
   uint64_t seed = 42;
   float dt_ms = 1.0f;
   bool fake_telemetry = false;  // phase-1 style sine wave
+  bool dao_only = false;        // phase-2: isolate half-center (no fields/sigma)
 };
 
 struct TelemetrySample {

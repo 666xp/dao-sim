@@ -324,6 +324,49 @@ Graph build_default_graph(uint64_t seed) {
   return g;
 }
 
+Graph build_dao_only_graph(uint64_t seed) {
+  const std::vector<RegionSpec> specs = {
+      {Region::DaoYang, 64},
+      {Region::DaoYin, 64},
+  };
+
+  Graph g;
+  uint32_t total = 0;
+  for (const auto& s : specs) total += s.count;
+  g.n = total;
+  g.region.assign(total, Region::DaoYang);
+  g.out_edges.assign(total, {});
+
+  std::vector<std::vector<uint32_t>> pools(static_cast<size_t>(Region::Output) + 1);
+  uint32_t idx = 0;
+  for (const auto& s : specs) {
+    for (uint32_t k = 0; k < s.count; ++k) {
+      g.region[idx] = s.region;
+      pools[static_cast<size_t>(s.region)].push_back(idx);
+      ++idx;
+    }
+  }
+
+  std::mt19937_64 rng(seed);
+  for (const auto& s : specs) {
+    wire_small_world(g, rng, pools[static_cast<size_t>(s.region)], 0.15f, 0.35f);
+  }
+
+  wire_bipartite(g, rng, pools[static_cast<size_t>(Region::DaoYang)],
+                 pools[static_cast<size_t>(Region::DaoYin)], 0.25f, true);
+  for (uint32_t i : pools[static_cast<size_t>(Region::DaoYang)]) {
+    for (auto& e : g.out_edges[i]) {
+      if (g.region[e.dst] == Region::DaoYin) e.sign = -1;
+    }
+  }
+  for (uint32_t i : pools[static_cast<size_t>(Region::DaoYin)]) {
+    for (auto& e : g.out_edges[i]) {
+      if (g.region[e.dst] == Region::DaoYang) e.sign = -1;
+    }
+  }
+  return g;
+}
+
 bool has_left_right_direct_edge(const Graph& g) {
   for (uint32_t i = 0; i < g.n; ++i) {
     if (!is_sediment_region(g.region[i])) continue;

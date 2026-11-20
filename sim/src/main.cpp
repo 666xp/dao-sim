@@ -41,6 +41,11 @@ int main(int argc, char** argv) {
 
   uint64_t last_pub = 0;
   while (!g_stop.load()) {
+    // Scheme A: only this thread publishes to TelemetryHub.
+    if (world.consume_publish_request()) {
+      hub.publish(world.sample());
+      last_pub = world.tick();
+    }
     if (world.running()) {
       world.step(1);
       if (world.tick() - last_pub >= 10) {
@@ -48,6 +53,7 @@ int main(int argc, char** argv) {
         last_pub = world.tick();
       }
     } else {
+      // Paused: idle wait so WS-thread step(n) does not race sim advances.
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }

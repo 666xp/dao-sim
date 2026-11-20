@@ -172,7 +172,8 @@ export default function App() {
       return acc + ((arr[i - 1] < 0 && v >= 0) || (arr[i - 1] >= 0 && v < 0) ? 1 : 0);
     }, 0);
     lines.push((zc >= 1 ? "PASS" : "FAIL") + ": dao_zero_crossings " + zc);
-    const sig = series.sigma.current.at(-1) ?? 0;
+    const sigArr = series.sigma.current;
+    const sig = sigArr.length ? sigArr[sigArr.length - 1] : 0;
     lines.push(
       (sig >= 0.5 && sig <= 1.5 ? "PASS" : "FAIL") + ": sigma_near_critical " + sig.toFixed(3),
     );

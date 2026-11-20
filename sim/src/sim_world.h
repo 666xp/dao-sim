@@ -7,6 +7,7 @@
 #include "graph.h"
 #include "neuron.h"
 
+#include <atomic>
 #include <cstdint>
 #include <random>
 #include <vector>
@@ -53,6 +54,12 @@ class SimWorld {
   const AblationFlags& ablation() const { return ablation_; }
   uint64_t tick() const { return tick_; }
 
+  // Scheme A: WS thread sets this after paused step; sim thread alone publishes.
+  void request_publish() { publish_requested_.store(true, std::memory_order_release); }
+  bool consume_publish_request() {
+    return publish_requested_.exchange(false, std::memory_order_acquire);
+  }
+
   // For tests: run dao-only style drive check helpers
   const DaoSnnState& dao_state() const { return dao_state_; }
   std::vector<uint16_t> recent_bits() const { return recent_bits_; }
@@ -75,6 +82,7 @@ class SimWorld {
   std::mt19937_64 rng_;
   uint64_t tick_ = 0;
   bool running_ = false;
+  std::atomic<bool> publish_requested_{false};
   std::vector<uint16_t> recent_bits_;
   // Pending forced pulses for ablation C
   std::vector<uint32_t> forced_pulse_targets_;

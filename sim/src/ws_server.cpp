@@ -93,9 +93,17 @@ void WsServer::handle_json(const std::string& msg) {
   } else if (cmd == "pause") {
     world_.pause();
   } else if (cmd == "step") {
+    // Only safe while paused: sim thread must not be advancing world.
+    if (world_.running()) {
+      std::cerr << "ws step ignored: engine is running (pause first)\n";
+      return;
+    }
     bool ok = false;
-    const uint64_t n = static_cast<uint64_t>(json_get_number(msg, "n", &ok));
-    world_.step(ok ? n : 1);
+    uint64_t n = static_cast<uint64_t>(json_get_number(msg, "n", &ok));
+    if (!ok || n == 0) n = 1;
+    if (n > 10000) n = 10000;
+    world_.step(n);
+    world_.request_publish();  // sim thread pushes one frame; hub stays single-producer
   } else if (cmd == "seed") {
     bool ok = false;
     const uint64_t v = static_cast<uint64_t>(json_get_number(msg, "value", &ok));

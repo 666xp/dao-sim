@@ -52,16 +52,34 @@ chmod +x scripts/verify_phase0.sh
 ./scripts/verify_phase0.sh
 ```
 
-等价手动命令：
+等价手动命令（MSVC 多配置务必带 `-C Debug`）：
 
 ```bat
 cmake -S sim -B sim/build-phase0 -DDAO_SIM_BUILD_ENGINE=OFF -DDAO_SIM_BUILD_DYNAMICS=OFF
-cmake --build sim/build-phase0 -j
-ctest --test-dir sim/build-phase0 --output-on-failure
-sim\build-phase0\sim_validate.exe 42
+cmake --build sim/build-phase0 --config Debug -j
+ctest --test-dir sim/build-phase0 -C Debug --output-on-failure
+sim\build-phase0\Debug\sim_validate.exe 42
 ```
 
-通过标准：`ctest` 仅 2 项（`test_graph`、`test_queue_long_delay`）全绿；`sim_validate` 的 PASS/FAIL 清单全绿。
+通过标准（阶段 4 红绿灯输入格式，定型后不再改）：`ctest` 2 项 Passed（`test_graph`、`test_queue_long_delay`）+ `sim_validate` 6 行 PASS + 退出码 0。
+
+## 阶段 1：假遥测管道（C++ → WebSocket → 浏览器曲线）
+
+**目标只有一条**：浏览器打开 `http://127.0.0.1:3847`，D / sigma 曲线在动；Pause 停、Start 继续、Step 1000 跳一段。  
+不接道核、不验证动力学、不要求输出比特非零。
+
+```bat
+cmake -S sim -B sim\build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
+cmake --build sim\build --config Debug
+npm --prefix web install
+start.bat
+```
+
+- 引擎：`ws://127.0.0.1:3848`（`sim_engine --fake`）
+- 前端：`http://127.0.0.1:3847`
+- `start.bat` 优先找 `sim\build\Debug\sim_engine.exe`，其次 Release；找不到则报错退出
+- **Step 仅在 Pause 后有效**；`step n` 上限 10000；快进后只推一帧，曲线 x 轴按 tick 跳一段属预期
+- **云端冒烟 ≠ 阶段 1 验收通过**；最终以本机浏览器曲线动作为准
 
 ## 构建与运行（完整产品）
 
@@ -69,27 +87,27 @@ sim\build-phase0\sim_validate.exe 42
 
 ```bash
 # 引擎 + 全部测试（含阶段 2）
-cmake -S sim -B sim/build
-cmake --build sim/build -j
-ctest --test-dir sim/build --output-on-failure
+cmake -S sim -B sim/build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
+cmake --build sim/build --config Debug -j
+ctest --test-dir sim/build -C Debug --output-on-failure
 
 # 导通层验收（PASS/FAIL 行）
-./sim/build/sim_validate 42
+./sim/build/sim_validate 42   # 或 sim/build/Debug/sim_validate.exe
 
 # 前端
 npm --prefix web install
 npm --prefix web run dev
 
-# 或一键（Linux/macOS）
-chmod +x start.sh
-./start.sh
+# 或一键：先引擎（假遥测）再前端
 # Windows: start.bat
+# Linux/macOS: ./start.sh
 ```
 
 假遥测（只测管道）：
 
 ```bash
 ./sim/build/sim_engine --fake
+# Windows Debug: sim\build\Debug\sim_engine.exe --fake
 ```
 
 ## 拓扑硬约束
@@ -130,8 +148,12 @@ rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src || true
 
 ## 已知风险（阶段 2）
 
-1. ODE 参考轨迹不与 SNN 逐点对齐；面板以 SNN 的 D(t) 为准，ODE 作包络。  
-2. 消融 A 必须只关道核 `u`，禁止全局 `u=0`。
+**阶段 2 开工前先单独跑道核 2000 tick，验证起振**（看 D(t) 是否持续过零、振幅不衰减）——这是最大风险点，别混在全网络里调。
+
+1. **道核半中心起振**：阳群 `a=0.02`、阴群 `a=0.1` 的适应电流不对称，是否足以产生持续交替？单独跑 2000 tick 看 D(t) 过零率与振幅。  
+2. **ODE 参考轨迹**不与 SNN 逐点对齐；面板以 SNN 的 D(t) 为准，ODE 只作背景包络。  
+3. **σ 慢控**时间常数须远慢于神经元（秒级），否则会把道核压掉。  
+4. 消融 A 必须只关道核 `u`，禁止全局 `u=0`。
 
 ## GitHub 远程
 

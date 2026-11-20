@@ -35,6 +35,7 @@ void SimWorld::rebuild() {
   dao_state_ = DaoSnnState{};
   tick_ = 0;
   recent_bits_.clear();
+  transport_ = TransportCounts{};
   forced_pulse_targets_.clear();
   rng_.seed(cfg_.seed);
 }
@@ -70,6 +71,26 @@ float SimWorld::region_rate(Region r) const {
     if (spiked_[i]) ++s;
   }
   return n ? static_cast<float>(s) / static_cast<float>(n) : 0.0f;
+}
+
+void SimWorld::accumulate_transport(uint32_t src, uint32_t dst) {
+  const Region rs = graph_.region[src];
+  const Region rd = graph_.region[dst];
+  const float D = dao_state_.D;
+  const bool L_to_dao = (rs == Region::LeftSediment && is_dao_region(rd));
+  const bool dao_to_R = (is_dao_region(rs) && rd == Region::RightSediment);
+  const bool R_to_dao = (rs == Region::RightSediment && is_dao_region(rd));
+  const bool dao_to_L = (is_dao_region(rs) && rd == Region::LeftSediment);
+  const bool L_to_R_path = L_to_dao || dao_to_R;
+  const bool R_to_L_path = R_to_dao || dao_to_L;
+  if (!L_to_R_path && !R_to_L_path) return;
+  if (D > 0.05f) {
+    if (L_to_R_path) ++transport_.yang_L_to_R;
+    if (R_to_L_path) ++transport_.yang_R_to_L;
+  } else if (D < -0.05f) {
+    if (R_to_L_path) ++transport_.yin_R_to_L;
+    if (L_to_R_path) ++transport_.yin_L_to_R;
+  }
 }
 
 void SimWorld::step(uint64_t n_ticks) {
@@ -131,7 +152,10 @@ void SimWorld::step_one() {
     // Cardinals: tonic bias so they fire, plus D-phase modulation ("breathe with D").
     if (is_cardinal_region(r)) I += 3.5f + 5.5f * Dprev * crit_.g;
 
-    if (ablation_.noise) I += 0.8f * noise_dist(rng_);
+    // Output group: tonic + |D| modulation so 12-bit stream is non-zero under real dynamics.
+    if (r == Region::Output) I += 8.0f + 10.0f * std::fabs(Dprev);
+
+    if (ablation_.noise) I += 3.5f * noise_dist(rng_);
 
     // Ablation A: disable adaptation current update for dao roles by freezing u.
     float u_before = neurons_[i].u;
@@ -165,6 +189,7 @@ void SimWorld::step_one() {
         se.amp = amp * 8.0f;
         queue_.push(se);
         if (dst_pool) ++child_pool;
+        accumulate_transport(i, e.dst);
       }
       criticality_observe_spike_pair(crit_, region_in_sigma_pool(graph_.region[i]), child_pool);
     }
@@ -196,6 +221,11 @@ TelemetrySample SimWorld::sample() const {
   t.sigma = crit_.sigma;
   t.g = crit_.g;
   for (int i = 0; i < 6; ++i) t.rates[i] = region_rate(cardinal_by_index(i));
+  uint32_t spiked_n = 0;
+  for (uint32_t i = 0; i < graph_.n; ++i) {
+    if (spiked_[i]) ++spiked_n;
+  }
+  t.global_rate = graph_.n ? static_cast<float>(spiked_n) / static_cast<float>(graph_.n) : 0.0f;
   t.out_bits = recent_bits_.empty() ? 0 : recent_bits_.back();
   return t;
 }

@@ -162,8 +162,19 @@ rg -n 'conscious|意识开关|semantic_map|neuron_to_word' sim/src || true
 
 1. **道核单独起振**（已过）：`sim_dao_bench 42 2000` → `PASS: dao_isolated_oscillation`
 2. **六方位 + 沉淀核 + Roche**（先关 σ）：`sim_fields_bench 42 3000 500` → `PASS: fields_roche_integration`
-3. **σ 慢控接入**（池排除道核/输出，`tau_sec=2`）：`sim_sigma_bench 42 5000 1000` → `PASS: sigma_slow_control`（D 仍过零、方位仍呼吸、g 不失控）
-4. 再接输出 12 bit → 消融 A/B/C
+3. **σ 慢控接入**（池排除道核/输出，`tau_sec=5`）：`sim_sigma_bench 42 5000 1000` → `PASS: sigma_slow_control`
+4. **阶段 3**：左右转运比 / 输出 12 bit / 消融 A·B·C
+
+```bat
+sim\build\Debug\sim_transport_bench.exe 42 4000
+sim\build\Debug\sim_output_bench.exe 4000 500
+sim\build\Debug\sim_ablation_bench.exe 42 5000
+```
+
+- 转运：`PASS: lr_alternating_ratio`（阳 L→道→R / 阴 R→道→L）
+- 输出：多种子非零、1 比例相近、序列互异（`PASS: output_nonpreset`）
+- 消融 A：关道核适应 → 过零骤降且全局放电不崩；B：关噪声 → 多种子更趋同；C：东群 50 脉冲 → 输出尾窗编辑距离上升
+- 快进 N tick：监测台已有（Pause 后快进）
 
 风险备忘：
 

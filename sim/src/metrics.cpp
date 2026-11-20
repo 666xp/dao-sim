@@ -74,4 +74,28 @@ float pearson(const std::vector<float>& a, const std::vector<float>& b) {
   return static_cast<float>(num / den);
 }
 
+float transport_alternating_ratio(const TransportCounts& c) {
+  const double aligned = static_cast<double>(c.yang_L_to_R + c.yin_R_to_L);
+  const double wrong = static_cast<double>(c.yang_R_to_L + c.yin_L_to_R);
+  return static_cast<float>(aligned / (wrong + 1.0));
+}
+
+float ones_density_u16(const std::vector<uint16_t>& bits, int width) {
+  if (bits.empty() || width <= 0) return 0.0f;
+  uint64_t ones = 0;
+  for (uint16_t b : bits) {
+    uint16_t x = static_cast<uint16_t>(b & static_cast<uint16_t>((1u << width) - 1u));
+    while (x) {
+      ones += x & 1u;
+      x = static_cast<uint16_t>(x >> 1);
+    }
+  }
+  return static_cast<float>(ones) /
+         static_cast<float>(bits.size() * static_cast<size_t>(width));
+}
+
+float mean_global_rate(const std::vector<float>& rates_per_tick) {
+  return mean_abs(rates_per_tick);  // rates are non-negative; mean_abs == mean
+}
+
 }  // namespace dao

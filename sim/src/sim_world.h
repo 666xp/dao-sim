@@ -5,6 +5,7 @@
 #include "dao_snn.h"
 #include "event_queue.h"
 #include "graph.h"
+#include "metrics.h"
 #include "neuron.h"
 
 #include <atomic>
@@ -34,6 +35,7 @@ struct TelemetrySample {
   float sigma = 1.0f;
   float g = 1.0f;
   float rates[6] = {0, 0, 0, 0, 0, 0};  // E W S N Up Down
+  float global_rate = 0.0f;             // mean spike fraction over all neurons
   uint16_t out_bits = 0;
 };
 
@@ -65,11 +67,14 @@ class SimWorld {
   // For tests: run dao-only style drive check helpers
   const DaoSnnState& dao_state() const { return dao_state_; }
   std::vector<uint16_t> recent_bits() const { return recent_bits_; }
+  const TransportCounts& transport() const { return transport_; }
+  void reset_transport() { transport_ = TransportCounts{}; }
 
  private:
   void rebuild();
   void step_one();
   float region_rate(Region r) const;
+  void accumulate_transport(uint32_t src, uint32_t dst);
 
   SimConfig cfg_;
   AblationFlags ablation_{};
@@ -86,6 +91,7 @@ class SimWorld {
   bool running_ = false;
   std::atomic<bool> publish_requested_{false};
   std::vector<uint16_t> recent_bits_;
+  TransportCounts transport_{};
   // Pending forced pulses for ablation C
   std::vector<uint32_t> forced_pulse_targets_;
 };

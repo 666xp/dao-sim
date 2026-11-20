@@ -50,6 +50,15 @@ if(DAO_SIM_BUILD_DYNAMICS)
 
   add_executable(sim_sigma_bench src/sigma_bench_main.cpp)
   target_link_libraries(sim_sigma_bench PRIVATE sim_core)
+
+  add_executable(sim_transport_bench src/transport_bench_main.cpp)
+  target_link_libraries(sim_transport_bench PRIVATE sim_core)
+
+  add_executable(sim_output_bench src/output_bench_main.cpp)
+  target_link_libraries(sim_output_bench PRIVATE sim_core)
+
+  add_executable(sim_ablation_bench src/ablation_bench_main.cpp)
+  target_link_libraries(sim_ablation_bench PRIVATE sim_core)
 endif()
 
 # Vendored deps under sim/third_party — no FetchContent / no GitHub at configure time.

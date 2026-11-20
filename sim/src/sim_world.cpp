@@ -124,12 +124,12 @@ void SimWorld::step_one() {
     if (r == Region::DaoYang) I += 4.5f + 2.0f * std::max(0.0f, -Dprev);
     if (r == Region::DaoYin) I += 4.5f + 2.0f * std::max(0.0f, Dprev);
 
-    // Phase alternating excitation/inhibition onto sediments.
-    if (r == Region::LeftSediment) I += 2.0f * Dprev * crit_.g;
-    if (r == Region::RightSediment) I += -2.0f * Dprev * crit_.g;
+    // Phase alternating drive onto sediments (tonic + D-signed modulation).
+    if (r == Region::LeftSediment) I += 3.0f + 4.0f * Dprev * crit_.g;
+    if (r == Region::RightSediment) I += 3.0f - 4.0f * Dprev * crit_.g;
 
-    // Cardinals modulated by |D| / sign.
-    if (is_cardinal_region(r)) I += 1.2f * Dprev * crit_.g;
+    // Cardinals: tonic bias so they fire, plus D-phase modulation ("breathe with D").
+    if (is_cardinal_region(r)) I += 3.2f + 4.5f * Dprev * crit_.g;
 
     if (ablation_.noise) I += 0.8f * noise_dist(rng_);
 
@@ -174,8 +174,8 @@ void SimWorld::step_one() {
   // ODE envelope: weak coupling from SNN D, not pointwise lock.
   dao_ode_step(ode_, cfg_.dt_ms, 0.02f * dao_state_.D);
 
-  // Isolated dao bench: do not let empty sigma pool drift g.
-  if (!cfg_.dao_only && tick_ % 50ull == 0) {
+  // Sigma slow control (skip for dao_only / fields-only benches).
+  if (cfg_.sigma_control && !cfg_.dao_only && tick_ % 50ull == 0) {
     criticality_end_window_and_control(crit_, 50.0f * cfg_.dt_ms);
   }
 

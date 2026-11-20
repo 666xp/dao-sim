@@ -32,7 +32,15 @@ CMake 开关：
 
 - CMake ≥ 3.16、C++17 编译器
 - Node.js ≥ 18（前端）
-- 网络：首次配置会用 CMake FetchContent 拉取 Catch2、IXWebSocket
+- Catch2 v3.5.4、IXWebSocket v11.4.4 已 vendoring 在 `sim/third_party/`，**配置阶段不访问 GitHub**
+
+若本机曾因 FetchContent / GitHub 失败留下残缺目录，先清再建：
+
+```bat
+rmdir /s /q sim\build
+cmake -S sim -B sim\build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
+cmake --build sim\build --config Debug
+```
 
 ## 阶段 0 验收（导通层绿灯）
 
@@ -69,6 +77,8 @@ sim\build-phase0\Debug\sim_validate.exe 42
 不接道核、不验证动力学、不要求输出比特非零。
 
 ```bat
+git pull
+rmdir /s /q sim\build
 cmake -S sim -B sim\build -DDAO_SIM_BUILD_ENGINE=ON -DDAO_SIM_BUILD_DYNAMICS=ON
 cmake --build sim\build --config Debug
 npm --prefix web install

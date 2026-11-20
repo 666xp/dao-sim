@@ -13,8 +13,6 @@ if(DAO_SIM_BUILD_ENGINE AND NOT DAO_SIM_BUILD_DYNAMICS)
   message(FATAL_ERROR "DAO_SIM_BUILD_ENGINE=ON requires DAO_SIM_BUILD_DYNAMICS=ON")
 endif()
 
-include(FetchContent)
-
 set(DAO_SIM_PHASE0_SOURCES
   src/graph.cpp
   src/event_queue.cpp
@@ -43,17 +41,13 @@ target_include_directories(sim_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(sim_validate src/validate_main.cpp)
 target_link_libraries(sim_validate PRIVATE sim_core)
 
+# Vendored deps under sim/third_party — no FetchContent / no GitHub at configure time.
 if(DAO_SIM_BUILD_ENGINE)
   find_package(Threads REQUIRED)
-  FetchContent_Declare(
-    ixwebsocket
-    GIT_REPOSITORY https://github.com/machinezone/IXWebSocket.git
-    GIT_TAG v11.4.4
-  )
   set(USE_TLS OFF CACHE BOOL "" FORCE)
   set(USE_ZLIB OFF CACHE BOOL "" FORCE)
   set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-  FetchContent_MakeAvailable(ixwebsocket)
+  add_subdirectory(third_party/IXWebSocket EXCLUDE_FROM_ALL)
 
   add_executable(sim_engine
     src/main.cpp
@@ -65,12 +59,9 @@ if(DAO_SIM_BUILD_ENGINE)
 endif()
 
 if(DAO_SIM_BUILD_TESTS)
-  FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG v3.5.4
-  )
-  FetchContent_MakeAvailable(Catch2)
+  set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+  set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
+  add_subdirectory(third_party/Catch2 EXCLUDE_FROM_ALL)
   include(CTest)
   enable_testing()
 
